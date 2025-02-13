@@ -1,5 +1,3 @@
-use std::{collections::HashMap, sync::LazyLock};
-
 use color_eyre::{
     eyre::{bail, eyre, Context as _},
     Result,
@@ -15,32 +13,6 @@ use crate::{
     sound::SawWave,
     Args,
 };
-
-static SCANCODE_TO_KEY: LazyLock<HashMap<Scancode, u8>> = LazyLock::new(|| {
-    let mut map = HashMap::new();
-
-    map.insert(Scancode::Num1, 0);
-    map.insert(Scancode::Num2, 1);
-    map.insert(Scancode::Num3, 2);
-    map.insert(Scancode::Num4, 3);
-
-    map.insert(Scancode::Q, 4);
-    map.insert(Scancode::W, 5);
-    map.insert(Scancode::E, 6);
-    map.insert(Scancode::R, 7);
-
-    map.insert(Scancode::A, 8);
-    map.insert(Scancode::S, 9);
-    map.insert(Scancode::D, 10);
-    map.insert(Scancode::F, 11);
-
-    map.insert(Scancode::Z, 12);
-    map.insert(Scancode::X, 13);
-    map.insert(Scancode::C, 14);
-    map.insert(Scancode::V, 15);
-
-    map
-});
 
 pub struct Chip8 {
     args: Args,
@@ -96,7 +68,7 @@ impl Chip8 {
         sink.pause();
 
         sink.set_volume(self.args.volume.min(100) as f32 / 100.0 * 0.025);
-        sink.append(SawWave::new(440.0, 44100));
+        sink.append(SawWave::new(440.0, 48000));
 
         loop {
             for event in self.event_pump.poll_iter() {
@@ -108,16 +80,16 @@ impl Chip8 {
                         scancode: Some(scancode),
                         ..
                     } => {
-                        if let Some(idx) = SCANCODE_TO_KEY.get(&scancode) {
-                            keys[*idx as usize] = true
+                        if let Some(idx) = scancode_to_key(scancode) {
+                            keys[idx as usize] = true
                         }
                     }
                     Event::KeyUp {
                         scancode: Some(scancode),
                         ..
                     } => {
-                        if let Some(idx) = SCANCODE_TO_KEY.get(&scancode) {
-                            keys[*idx as usize] = false
+                        if let Some(idx) = scancode_to_key(scancode) {
+                            keys[idx as usize] = false
                         }
                     }
                     _ => {}
@@ -317,5 +289,31 @@ impl Chip8 {
         }
 
         self.display.update()
+    }
+}
+
+const fn scancode_to_key(scancode: Scancode) -> Option<u8> {
+    match scancode {
+        Scancode::Num1 => Some(0),
+        Scancode::Num2 => Some(1),
+        Scancode::Num3 => Some(2),
+        Scancode::Num4 => Some(3),
+
+        Scancode::Q => Some(4),
+        Scancode::W => Some(5),
+        Scancode::E => Some(6),
+        Scancode::R => Some(7),
+
+        Scancode::A => Some(8),
+        Scancode::S => Some(9),
+        Scancode::D => Some(10),
+        Scancode::F => Some(11),
+
+        Scancode::Z => Some(12),
+        Scancode::X => Some(13),
+        Scancode::C => Some(14),
+        Scancode::V => Some(15),
+
+        _ => None,
     }
 }

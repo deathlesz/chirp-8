@@ -6,7 +6,6 @@ pub struct Display {
     canvas: Canvas<Window>,
     scale: u32,
     pub buffer: [[bool; Self::HEIGHT as usize]; Self::WIDTH as usize],
-    pub old_buffer: [[bool; Self::HEIGHT as usize]; Self::WIDTH as usize],
 }
 
 impl Display {
@@ -42,16 +41,10 @@ impl Display {
             canvas,
             scale,
             buffer: [[false; Self::HEIGHT as usize]; Self::WIDTH as usize],
-            old_buffer: [[false; Self::HEIGHT as usize]; Self::WIDTH as usize],
         })
     }
 
-    pub fn retire(&mut self) {
-        self.old_buffer.copy_from_slice(&self.buffer);
-    }
-
     pub fn clear(&mut self) -> Result<()> {
-        self.retire();
         self.buffer = [[false; Self::HEIGHT as usize]; Self::WIDTH as usize];
 
         self.update()
@@ -60,8 +53,6 @@ impl Display {
     pub fn update(&mut self) -> Result<()> {
         for i in 0..Self::WIDTH {
             for j in 0..Self::HEIGHT {
-                // FIXME: causes some weird rendering bugs
-                // if self.buffer[i as usize][j as usize] ^ self.old_buffer[i as usize][j as usize] {
                 let rect = Rect::new(
                     i as i32 * self.scale as i32,
                     j as i32 * self.scale as i32,
@@ -78,11 +69,9 @@ impl Display {
                 self.canvas
                     .fill_rect(rect)
                     .map_err(|_| eyre!("failed to draw"))?;
-                // }
             }
         }
 
-        self.retire();
         self.canvas.present();
 
         Ok(())
